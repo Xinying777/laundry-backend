@@ -155,8 +155,6 @@ GET /health
 GET /api - View all available endpoints
 ```
 
-For detailed API documentation, see [API_DOCUMENTATION.md](./api_documentation.md)
-
 ### Quick Test Endpoints
 
 1. **Health Check**
@@ -229,7 +227,7 @@ laundry-backend/
 | `DB_HOST` | Database host | localhost |
 | `DB_NAME` | Database name | - |
 | `DB_PASSWORD` | Database password | - |
-| `DB_PORT` | Database port | 5432 |
+| `DB_PORT` | Database port | 5433 |
 
 ### Database Schema
 
@@ -239,7 +237,7 @@ The application uses PostgreSQL with the following main tables:
 - `reservations`: Booking records and schedules  
 - `lost_and_found`: Lost item reports and management
 
-## 🚧 Current Limitations & Future Improvements
+## Current Limitations & Future Improvements
 
 ### Current State
 - **Authentication**: Mock implementation for testing (password hardcoded as "demo")
@@ -250,7 +248,6 @@ The application uses PostgreSQL with the following main tables:
 ### Planned Improvements
 - [ ] Implement proper JWT authentication
 - [ ] Add input validation middleware
-- [ ] Implement proper password hashing (bcrypt)
 - [ ] Add rate limiting
 - [ ] Implement machine availability checking
 - [ ] Add reservation conflict detection
@@ -259,14 +256,13 @@ The application uses PostgreSQL with the following main tables:
 - [ ] Add logging system
 - [ ] Implement proper error handling middleware
 
-## 🐛 Known Issues
+## Known Issues
 
-1. **Authentication**: Currently using GET request for login (should be POST)
-2. **Password Security**: Passwords stored in plain text for testing
-3. **Token Management**: Mock JWT tokens without proper validation
-4. **Concurrent Reservations**: No conflict detection for overlapping bookings
+1. **Password Security**: Passwords stored in plain text for testing
+2. **Token Management**: Mock JWT tokens without proper validation
+3. **Concurrent Reservations**: No conflict detection for overlapping bookings
 
-## 📝 Development Notes
+## Development Notes
 
 ### Database Connection
 The application connects to PostgreSQL using the `pg` library. Connection status is logged on startup.
@@ -282,22 +278,8 @@ The application connects to PostgreSQL using the `pg` library. Connection status
 - Integration tests for database operations
 - API endpoint testing with Supertest
 
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
+## License
 
 This project is part of a capstone project assignment.
 
-## 📞 Support
-
-For questions or issues, please create an issue in the GitHub repository.
-
----
-
-**Note**: This is a capstone project backend implementation. Some features are implemented for demonstration purposes and would need additional security and validation measures for production use.
