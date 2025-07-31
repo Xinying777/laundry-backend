@@ -138,7 +138,7 @@ A comprehensive backend solution for managing laundry machine reservations and l
 
 The server will start on `http://localhost:3000`
 
-## 📚 API Documentation
+## API Documentation
 
 ### Base URL
 ```
@@ -184,7 +184,7 @@ GET /api - View all available endpoints
      }'
    ```
 
-## 🧪 Testing
+## Testing
 
 Run the test suite:
 ```bash
@@ -197,7 +197,7 @@ You can test the APIs using:
 - **curl**: Use the examples provided above
 - **Browser**: For GET endpoints
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 laundry-backend/
@@ -216,7 +216,7 @@ laundry-backend/
 └── README.md                    # This file
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
