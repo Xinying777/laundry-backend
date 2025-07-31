@@ -1,0 +1,198 @@
+-- Laundry Reservation System Database Initialization
+-- Create this database manually first: CREATE DATABASE laundry_db;
+
+-- =============================================
+-- Table: users
+-- Description: Student information and authentication
+-- =============================================
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    student_id VARCHAR(20) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- Table: machines  
+-- Description: Washing machine inventory and status
+-- =============================================
+CREATE TABLE IF NOT EXISTS machines (
+    id SERIAL PRIMARY KEY,
+    machine_number VARCHAR(10) UNIQUE NOT NULL, -- 'machine1', 'machine2'
+    status VARCHAR(20) DEFAULT 'available', -- 'available', 'occupied', 'maintenance'
+    location VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- Table: reservations
+-- Description: Booking records and schedules
+-- =============================================
+CREATE TABLE IF NOT EXISTS reservations (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    machine_id INTEGER REFERENCES machines(id),
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- Table: lost_and_found
+-- Description: Lost item reports and management  
+-- =============================================
+CREATE TABLE IF NOT EXISTS lost_and_found (
+    id SERIAL PRIMARY KEY,
+    reporter_id INTEGER REFERENCES users(id),
+    item_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    location_found VARCHAR(100),
+    date_found DATE,
+    status VARCHAR(20) DEFAULT 'active',
+    contact_info VARCHAR(200),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================
+-- Indexes for better performance
+-- =============================================
+
+-- Index on student_id for faster login lookups
+CREATE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id);
+
+-- Index on machine status for availability queries
+CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(status);
+
+-- Indexes for reservation queries
+CREATE INDEX IF NOT EXISTS idx_reservations_user_id ON reservations(user_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_machine_id ON reservations(machine_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_start_time ON reservations(start_time);
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+
+-- Indexes for lost and found queries
+CREATE INDEX IF NOT EXISTS idx_lost_and_found_status ON lost_and_found(status);
+CREATE INDEX IF NOT EXISTS idx_lost_and_found_date_found ON lost_and_found(date_found);
+
+-- =============================================
+-- Sample Data for Testing
+-- =============================================
+
+-- Insert default machines
+INSERT INTO machines (machine_number, location, status) VALUES 
+('Machine 1', 'Laundry Room A', 'available'),
+('Machine 2', 'Laundry Room A', 'available'),
+('Machine 3', 'Laundry Room B', 'maintenance')
+ON CONFLICT (machine_number) DO NOTHING;
+
+-- Insert test user (学号和密码都为 'demo')
+INSERT INTO users (student_id, password, name, email) VALUES 
+('demo', 'demo', 'Test User', 'test@university.edu'),
+('12345', 'demo', 'Student Test', 'student@university.edu')
+ON CONFLICT (student_id) DO NOTHING;
+
+-- Insert test reservations
+INSERT INTO reservations (user_id, machine_id, start_time, end_time, status) VALUES 
+(1, 1, CURRENT_TIMESTAMP + INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '2 hours', 'confirmed')
+ON CONFLICT DO NOTHING;
+
+-- Insert test lost and found items
+INSERT INTO lost_and_found (reporter_id, item_name, description, location_found, date_found, contact_info) VALUES 
+(1, 'Blue Sweater', 'Navy blue sweater with university logo', 'Laundry Room A', CURRENT_DATE - INTERVAL '2 days', 'test@university.edu')
+ON CONFLICT DO NOTHING;
+
+-- =============================================
+-- Utility Functions (Optional)
+-- =============================================
+
+-- Function to update updated_at timestamp automatically
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Add triggers to update updated_at automatically
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_machines_updated_at BEFORE UPDATE ON machines 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_reservations_updated_at BEFORE UPDATE ON reservations 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_lost_and_found_updated_at BEFORE UPDATE ON lost_and_found 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =============================================
+-- Views for Common Queries (Optional)
+-- =============================================
+
+-- View for available machines
+CREATE OR REPLACE VIEW available_machines AS
+SELECT 
+    id,
+    machine_number,
+    type,
+    location,
+    floor,
+    brand,
+    capacity_kg
+FROM machines 
+WHERE status = 'available';
+
+-- View for active reservations with user details
+CREATE OR REPLACE VIEW active_reservations AS
+SELECT 
+    r.id,
+    r.start_time,
+    r.end_time,
+    r.status,
+    u.name as user_name,
+    u.student_id,
+    m.machine_number,
+    m.type as machine_type,
+    m.location
+FROM reservations r
+JOIN users u ON r.user_id = u.id
+JOIN machines m ON r.machine_id = m.id
+WHERE r.status IN ('pending', 'confirmed');
+
+-- View for active lost and found items
+CREATE OR REPLACE VIEW active_lost_items AS
+SELECT 
+    lf.id,
+    lf.item_name,
+    lf.description,
+    lf.category,
+    lf.color,
+    lf.location_found,
+    lf.date_found,
+    lf.contact_info,
+    u.name as reporter_name,
+    u.student_id as reporter_student_id
+FROM lost_and_found lf
+JOIN users u ON lf.reporter_id = u.id
+WHERE lf.status = 'active'
+ORDER BY lf.date_found DESC;
+
+-- =============================================
+-- Success Message
+-- =============================================
+DO $
+BEGIN
+    RAISE NOTICE 'Database initialization completed successfully!';
+    RAISE NOTICE 'Tables created: users, machines, reservations, lost_and_found';
+    RAISE NOTICE 'Sample data inserted for testing';
+    RAISE NOTICE 'Views created: available_machines, active_reservations, active_lost_items';
+END $;

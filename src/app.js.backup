@@ -1,0 +1,39 @@
+# 先备份当前文件
+cp src/app.js src/app.js.backup
+
+# 删除错误的文件并重新创建
+rm src/app.js
+
+# 重新创建正确的文件
+cat << 'EOF' > src/app.js
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+
+const app = express();
+
+// 中间件
+app.use(helmet());
+app.use(cors());
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 路由
+const authRoutes = require('./routes/auth');
+const machineRoutes = require('./routes/machines');
+const reservationRoutes = require('./routes/reservations');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/machines', machineRoutes);
+app.use('/api/reservations', reservationRoutes);
+
+// 健康检查端点
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Laundry Backend is running!' });
+});
+
+// 错误处理中间件
+app.use((err, req, res, next) => {
+  console.error(err.stack);
